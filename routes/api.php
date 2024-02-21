@@ -28,7 +28,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::post('/change/task/status', 'App\Http\Controllers\Api\TaskManagmentController@chnageTaskStatus')->name('chnageTaskStatus');
         Route::post('/user/task', 'App\Http\Controllers\Api\TaskManagmentController@userSpecificTaskList')->name('userSpecificTaskList');
 });
-  //  Route::get('/task/list', 'App\Http\Controllers\Api\TaskManagmentController@taskLising')->name('taskLising');
 
 
 
