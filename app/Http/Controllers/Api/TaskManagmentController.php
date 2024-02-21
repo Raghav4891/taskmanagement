@@ -32,7 +32,7 @@ class TaskManagmentController extends Controller
     public function createUpdaateTask(Request $request)
     {
         if (Auth::check()) {
-            $taskId = $request->get('id', 0);
+            $taskId = $request->get('id');
             $taskTitle = $request->get('title');
             $taskDescription = $request->get('description');
             $taskStatus = $request->get('status', 0);
@@ -46,7 +46,6 @@ class TaskManagmentController extends Controller
                     'satus' => $taskStatus,
                     'due_date' => $taskDueDate
                 ]);
-
             $taskDetail = Task::where('id', $task->id)->get()->first();
             return Response(['data' => $taskDetail], 200);
         }
@@ -65,12 +64,12 @@ class TaskManagmentController extends Controller
                 $createdAt = date('Y-m-d');
             } else {
                 $status = $checkTaskExist->status;
-                $createdAt = $checkTaskExist->craeted_at;
+                $createdAt = $checkTaskExist->created_at;
             }
             $checkTaskExist->user_id = $userId;
             $checkTaskExist->task_id = $taskId;
             $checkTaskExist->status = $status;
-            $checkTaskExist->craeted_at = $createdAt;
+            $checkTaskExist->created_at = $createdAt;
             if ($checkTaskExist->save()) {
                 return Response(['message' => 'Task assigned successfully.'], 200);
             } else {
@@ -86,7 +85,7 @@ class TaskManagmentController extends Controller
         if (Auth::check()) {
             $userId = $request->get('user_id');
             $taskId = $request->get('task_id');
-            $unassignTaskExist = UserTask::where('task_id', $taskId)->where('user_id')->get()->first();
+            $unassignTaskExist = UserTask::where('task_id', $taskId)->where('user_id',$userId)->get()->first();
             if ($unassignTaskExist) {
                 UserTask::where('id', $unassignTaskExist->id)->delete();
                 return Response(['message' => 'User removed from a task'], 200);
@@ -156,9 +155,6 @@ class TaskManagmentController extends Controller
         if ($dueDate) {
             $getTaskData = $getTaskData->where('due_date', $dueDate);
         }
-        if ($dueDate) {
-            $getTaskData = $getTaskData->where('due_date', $dueDate);
-        }
         if ($userId) {
             $getTaskData = $getTaskData->join('task_user', 'task_user.task_id', 'task.id')
                 ->join('users', 'users.id', 'task_user.user_id')
@@ -168,4 +164,5 @@ class TaskManagmentController extends Controller
         return Response(['task' => $getTaskData], 200);
     }
 }
+
 }

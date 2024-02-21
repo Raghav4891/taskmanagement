@@ -12,7 +12,7 @@ class Task extends Model {
         'status',
         'due_date',
         'created_at'];
-    protected $primaryKey = 'sgid';
+    protected $primaryKey = 'id';
 
 
 }

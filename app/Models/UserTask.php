@@ -11,7 +11,7 @@ class UserTask extends Model {
         'user_id',
         'status',
         'created_at'];
-    protected $primaryKey = 'sgid';
+    protected $primaryKey = 'id';
 
 
 }
