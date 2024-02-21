@@ -52,6 +52,28 @@ class TaskManagmentController extends Controller
         return Response(['data' => 'Unauthorized'], 401);
     }
 
+    public function deleteTask(Request $request){
+        if(Auth::check()){
+            $validator = Validator::make($request->all(), [
+                'task_id' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return Response(['message' => $validator->errors()], 401);
+            }
+            $taskId = $request->get('task_id');
+            $checkTaskExist = UserTask::where('task_id', $taskId)->get()->all();
+            if($checkTaskExist){
+                UserTask::where('task_id', $taskId)->delete();
+            }
+            Task::where('id', $taskId)->delete();
+            return Response(['message' => 'Task deleted successfully.'], 200);
+
+        }
+        else {
+            return Response(['data' => 'Unauthorized'], 401);
+        }
+    }
+
     public function assignTaskToUser(Request $request)
     {
         if (Auth::check()) {

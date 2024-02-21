@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
         Route::group(['middleware' => 'auth:sanctum'],function(){
         Route::get('/task/list', 'App\Http\Controllers\Api\TaskManagmentController@taskLising')->name('taskLising');
         Route::post('/create/update/task', 'App\Http\Controllers\Api\TaskManagmentController@createUpdaateTask')->name('createUpdaateTask');
+        Route::post('/delete/task', 'App\Http\Controllers\Api\TaskManagmentController@deleteTask')->name('deleteTask');
         Route::post('/assign/user/task', 'App\Http\Controllers\Api\TaskManagmentController@assignTaskToUser')->name('assignTaskToUser');
         Route::post('/unassign/user/task', 'App\Http\Controllers\Api\TaskManagmentController@unassignUserFromTask')->name('unassignUserFromTask');
         Route::post('/change/task/status', 'App\Http\Controllers\Api\TaskManagmentController@chnageTaskStatus')->name('chnageTaskStatus');
