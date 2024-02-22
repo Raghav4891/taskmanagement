@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Auth;
+use mysql_xdevapi\Exception;
 use Validator;
 class TaskManagmentController extends Controller
 {
@@ -31,19 +32,26 @@ class TaskManagmentController extends Controller
 
     public function createUpdaateTask(Request $request)
     {
+        try{
         if (Auth::check()) {
             $taskId = $request->get('id');
             $taskTitle = $request->get('title');
             $taskDescription = $request->get('description');
             $taskStatus = $request->get('status', 0);
             $taskDueDate = $request->get('due_date');
+            $validator = Validator::make($request->all(), [
+                'title' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return Response(['message' => $validator->errors()], 401);
+            }
             $task = Task::updateOrCreate([
                 'id' => $taskId
             ],
                 [
                     'title' => $taskTitle,
                     'description' => $taskDescription,
-                    'satus' => $taskStatus,
+                    'status' => $taskStatus,
                     'due_date' => $taskDueDate
                 ]);
             $taskDetail = Task::where('id', $task->id)->get()->first();
@@ -51,8 +59,13 @@ class TaskManagmentController extends Controller
         }
         return Response(['data' => 'Unauthorized'], 401);
     }
+    catch(Exception $e){
+    return Response(['message' => 'Whoops something went wrong.'], 400);
+    }
+    }
 
     public function deleteTask(Request $request){
+        try{
         if(Auth::check()){
             $validator = Validator::make($request->all(), [
                 'task_id' => 'required'
@@ -73,12 +86,24 @@ class TaskManagmentController extends Controller
             return Response(['data' => 'Unauthorized'], 401);
         }
     }
+    catch(Exception $e){
+    return Response(['message' => 'Whoops something went wrong.'], 400);
+    }
+    }
 
     public function assignTaskToUser(Request $request)
     {
+        try{
         if (Auth::check()) {
             $userId = $request->get('user_id');
             $taskId = $request->get('task_id');
+            $validator = Validator::make($request->all(), [
+                'task_id' => 'required',
+                'user_id' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return Response(['message' => $validator->errors()], 401);
+            }
             $checkTaskExist = UserTask::where('task_id', $taskId)->where('user_id')->get()->first();
             if (!$checkTaskExist) {
                 $checkTaskExist = new UserTask();
@@ -101,12 +126,23 @@ class TaskManagmentController extends Controller
             return Response(['data' => 'Unauthorized'], 401);
         }
     }
+catch(Exception $e){
+return Response(['message' => 'Whoops something went wrong.'], 400);
+}
+    }
 
     public function unassignUserFromTask(Request $request)
     {
+        try{
         if (Auth::check()) {
             $userId = $request->get('user_id');
             $taskId = $request->get('task_id');
+            $validator = Validator::make($request->all(), [
+                'task_id' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return Response(['message' => $validator->errors()], 401);
+            }
             $unassignTaskExist = UserTask::where('task_id', $taskId)->where('user_id',$userId)->get()->first();
             if ($unassignTaskExist) {
                 UserTask::where('id', $unassignTaskExist->id)->delete();
@@ -118,12 +154,23 @@ class TaskManagmentController extends Controller
             return Response(['data' => 'Unauthorized'], 401);
         }
     }
+catch(Exception $e){
+return Response(['message' => 'Whoops something went wrong.'], 400);
+}
+    }
 
     public function chnageTaskStatus(Request $request)
     {
+        try{
         if (Auth::check()) {
             $taskId = $request->get('task_id');
             $status = $request->get('status', 0);
+            $validator = Validator::make($request->all(), [
+                'task_id' => 'required'
+            ]);
+            if ($validator->fails()) {
+                return Response(['message' => $validator->errors()], 401);
+            }
             $checkTaskExist = Task::where('id', $taskId)->get()->first();
             if ($checkTaskExist) {
                 Task::where('id', $checkTaskExist->id)->update(['status' => $status]);
@@ -134,6 +181,10 @@ class TaskManagmentController extends Controller
         } else {
             return Response(['data' => 'Unauthorized'], 401);
         }
+    }
+catch(Exception $e){
+return Response(['message' => 'Whoops something went wrong.'], 400);
+}
     }
 
     public function userSpecificTaskList(Request $request)
@@ -166,25 +217,37 @@ class TaskManagmentController extends Controller
 
     public function taskLising(Request $request)
     {
-        if (Auth::check()) {
-        $status = $request->get('status', 0);
-        $dueDate = $request->get('due_date');
-        $userId = $request->get('user_id', 0);
-        $getTaskData = Task::select('*');
-        if ($status) {
-            $getTaskData = $getTaskData->where('status', $status);
+        try{
+            if (Auth::check()) {
+                $status = $request->get('status', 0);
+                $dueDate = $request->get('due_date');
+                $userId = $request->get('user_id', 0);
+                $getTaskData = Task::select('*');
+                if ($status) {
+                    $getTaskData = $getTaskData->where('status', $status);
+                }
+                if ($dueDate) {
+                    $getTaskData = $getTaskData->where('due_date', $dueDate);
+                }
+                if ($userId) {
+                    $getTaskData = $getTaskData->join('task_user', 'task_user.task_id', 'task.id')
+                        ->join('users', 'users.id', 'task_user.user_id')
+                        ->where('task_user.id', $userId);
+                }
+                $getTaskData = $getTaskData->get()->all();
+                if($getTaskData){
+                    return Response(['task' => $getTaskData], 200);
+                }
+                else{
+                    return Response(['message' => 'Task not found with search criteria.'], 400);
+                }
+
+            }
         }
-        if ($dueDate) {
-            $getTaskData = $getTaskData->where('due_date', $dueDate);
+        catch(Exception $e){
+            return Response(['message' => 'Task not found with search criteria.'], 400);
         }
-        if ($userId) {
-            $getTaskData = $getTaskData->join('task_user', 'task_user.task_id', 'task.id')
-                ->join('users', 'users.id', 'task_user.user_id')
-                ->where('task_user.id', $userId);
-        }
-        $getTaskData = $getTaskData->get()->all();
-        return Response(['task' => $getTaskData], 200);
-    }
+
 }
 
 }
